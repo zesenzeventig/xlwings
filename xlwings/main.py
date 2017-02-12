@@ -462,7 +462,10 @@ class Book(object):
 
     """
 
-    def __init__(self, fullname=None, impl=None):
+    def __init__(self, fullname=None, impl=None, engine=None):
+        if engine == 'openpyxl':
+            from . import _openpyxl as openpyxl
+            impl = openpyxl.App().books.open(fullname)
         if not impl:
             if fullname:
                 fullname = fullname.lower()
