@@ -17,13 +17,6 @@ else:
     from future_builtins import map
     builtins = __builtins__
 
-# Platform specifics
-if sys.platform.startswith('win'):
-    from . import _xlwindows as xlplatform
-else:
-    from . import _xlmac as xlplatform
-
-time_types = xlplatform.time_types
 
 # Errors
 class ShapeAlreadyExists(Exception):

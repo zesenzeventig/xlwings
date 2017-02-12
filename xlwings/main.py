@@ -15,7 +15,7 @@ import re
 import numbers
 import inspect
 
-from . import xlplatform, string_types, ShapeAlreadyExists, PY3
+from . import string_types, ShapeAlreadyExists, PY3
 from .utils import VersionNumber
 from . import utils
 
@@ -157,8 +157,14 @@ class Apps(object):
         for app in self.impl:
             yield App(impl=app)
 
-
-apps = Apps(impl=xlplatform.Apps())
+if sys.platform.startswith('win'):
+    from . import _xlwindows as engine
+    apps = Apps(impl=engine.Apps())
+elif sys.platform.startswith('darwin'):
+    from . import _xlmac as engine
+    apps = Apps(impl=engine.Apps())
+else:
+    apps = None
 
 
 class App(object):
@@ -199,11 +205,19 @@ class App(object):
         file is not being overwritten from different instances.
     """
 
-    def __init__(self, visible=None, spec=None, add_book=True, impl=None):
+    def __init__(self, visible=None, spec=None, add_book=True, engine=None, impl=None):
         if impl is None:
-            self.impl = xlplatform.App(spec=spec, add_book=add_book)
-            if visible or visible is None:
-                self.visible = True
+            if engine == 'openpyxl':
+                from . import _openpyxl as engine
+                self.impl = engine.App()
+            elif engine is None or engine in ['pywin32', 'appscript']:
+                if sys.platform.startswith('win'):
+                    from . import _xlwindows as engine
+                elif sys.platform.startswith('darwin'):
+                    from . import _xlmac as engine
+                self.impl = engine.App(spec=spec, add_book=add_book)
+                if visible or visible is None:
+                    self.visible = True
         else:
             self.impl = impl
             if visible:
@@ -464,8 +478,7 @@ class Book(object):
 
     def __init__(self, fullname=None, impl=None, engine=None):
         if engine == 'openpyxl':
-            from . import _openpyxl as openpyxl
-            impl = openpyxl.App().books.open(fullname)
+            impl = App(engine='openpyxl').books.open(fullname)
         if not impl:
             if fullname:
                 fullname = fullname.lower()
@@ -539,7 +552,7 @@ class Book(object):
         elif len(sys.argv) > 2 and sys.argv[2] == 'from_xl':
             fullname = sys.argv[1].lower()
             if sys.platform.startswith('win'):
-                app = App(impl=xlplatform.App(xl=int(sys.argv[4])))  # hwnd
+                app = App(impl=engine.App(xl=int(sys.argv[4])))  # hwnd
                 if not PY3 and isinstance(fullname, str):
                     fullname = fullname.decode('mbcs')
                 return cls(impl=app.books.open(fullname).impl)
@@ -553,9 +566,9 @@ class Book(object):
                     else:
                         fullname = fullname.decode('utf-8')
                 return cls(impl=Book(fullname).impl)
-        elif xlplatform.BOOK_CALLER:
+        elif engine.BOOK_CALLER:
             # Called via OPTIMIZED_CONNECTION = True
-            return cls(impl=xlplatform.Book(xlplatform.BOOK_CALLER))
+            return cls(impl=engine.Book(engine.BOOK_CALLER))
         else:
             raise Exception('Workbook.caller() must not be called directly. Call through Excel or set a mock caller '
                             'first with Book.set_mock_caller().')
@@ -604,7 +617,7 @@ class Book(object):
         except OSError:
             pass
 
-        xlplatform.open_template(os.path.realpath(os.path.join(this_dir, template_file)))
+        engine.open_template(os.path.realpath(os.path.join(this_dir, template_file)))
 
     def macro(self, name):
         """
@@ -2065,7 +2078,7 @@ class Chart(object):
         .. versionadded:: 0.9.0
         """
         impl = self.impl.parent
-        if isinstance(impl, xlplatform.Book):
+        if isinstance(impl, engine.Book):
             return Book(impl=self.impl.parent)
         else:
             return Sheet(impl=self.impl.parent)

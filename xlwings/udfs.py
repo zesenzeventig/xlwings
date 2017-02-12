@@ -10,7 +10,7 @@ from win32com.client import Dispatch
 
 from . import conversion
 from .utils import VBAWriter
-from . import xlplatform
+from . import engine
 from . import Range
 
 from . import PY3
@@ -198,21 +198,21 @@ def call_udf(module_name, func_name, args, this_workbook, caller):
         arg_info = args_info[min(i, len(args_info)-1)]
         if type(arg) is int and arg == -2147352572:      # missing
             args[i] = arg_info.get('optional', None)
-        elif xlplatform.is_range_instance(arg):
+        elif engine.is_range_instance(arg):
             if arg_info.get('output', False):
                 output_param_indices.append(i)
-                args[i] = OutputParameter(Range(impl=xlplatform.Range(xl=arg)), arg_info['options'], func, caller)
+                args[i] = OutputParameter(Range(impl=engine.Range(xl=arg)), arg_info['options'], func, caller)
             else:
-                args[i] = conversion.read(Range(impl=xlplatform.Range(xl=arg)), None, arg_info['options'])
+                args[i] = conversion.read(Range(impl=engine.Range(xl=arg)), None, arg_info['options'])
         else:
             args[i] = conversion.read(None, arg, arg_info['options'])
 
-    xlplatform.BOOK_CALLER = Dispatch(this_workbook)
+    engine.BOOK_CALLER = Dispatch(this_workbook)
     ret = func(*args)
 
     if ret_info['options'].get('expand', None):
         from .server import add_idle_task
-        add_idle_task(DelayWrite(Range(impl=xlplatform.Range(xl=caller)), ret_info['options'], ret, caller))
+        add_idle_task(DelayWrite(Range(impl=engine.Range(xl=caller)), ret_info['options'], ret, caller))
 
     return conversion.write(ret, None, ret_info['options'])
 
