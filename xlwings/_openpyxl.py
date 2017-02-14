@@ -96,11 +96,16 @@ class Range(object):
 
     @property
     def raw_value(self):
-        return self.api.value
+        return [[c.value for c in row] for row in self.api]
+
+    @raw_value.setter
+    def raw_value(self, data):
+        if self.api is not None:
+            self.sheet.api[self.api.coordinate] = data
 
     @property
     def address(self):
         return self.api.coordinate
 
     def __len__(self):
-        return 1
+        return 1  # TODO
