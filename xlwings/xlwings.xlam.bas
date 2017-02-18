@@ -10,7 +10,7 @@ not_present:
     ModuleIsPresent = False
 End Function
 
-Sub ImportPythonUDFsAddIn(control As IRibbonControl)
+Sub import_functions(control As IRibbonControl)
     Set wb = ActiveWorkbook
     If Not ModuleIsPresent(wb, "xlwings") Then
         MsgText = "Make sure that this workbook contains the xlwings module "
@@ -27,3 +27,45 @@ Sub ImportPythonUDFsAddIn(control As IRibbonControl)
     Application.Run "'" + ActiveWorkbook.Name + "'!ImportPythonUDFs"
     Set wb = Nothing
 End Sub
+
+'Callback for interpreter onChange
+Sub set_interpreter(control As IRibbonControl, text As String)
+End Sub
+
+'Callback for interpreter getText
+Sub get_interpreter(control As IRibbonControl, ByRef returnedVal)
+End Sub
+
+'Callback for pythonpath onChange
+Sub set_pythonpath(control As IRibbonControl, text As String)
+End Sub
+
+'Callback for pythonpath getText
+Sub get_pythonpath(control As IRibbonControl, ByRef returnedVal)
+End Sub
+
+'Callback for logfile onChange
+Sub set_logpath(control As IRibbonControl, text As String)
+End Sub
+
+'Callback for logfile getText
+Sub get_logpath(control As IRibbonControl, ByRef returnedVal)
+End Sub
+
+'Callback for comserver onAction
+Sub change_comserver(control As IRibbonControl, pressed As Boolean)
+End Sub
+
+'Callback for udfmodules onChange
+Sub set_udfmodules(control As IRibbonControl, text As String)
+End Sub
+
+'Callback for udfmodules getText
+Sub get_udfmodules(control As IRibbonControl, ByRef returnedVal)
+End Sub
+
+'Callback for udfdebug onAction
+Sub change_udfdebug(control As IRibbonControl, pressed As Boolean)
+End Sub
+
+
